@@ -16,6 +16,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import databaseconnection.*;
 import ermss_popup.*;
+import ermss_panels.*;
+import java.awt.Image;
+import javax.swing.ImageIcon;
+
 
 /**
  *
@@ -29,11 +33,20 @@ public class Mainframe extends javax.swing.JFrame {
     
     PreparedStatement pts;
      ResultSet rs;
+     byte [] photo = null;
+     ImageIcon equipimage;
+     
+     
+     
+     
     
     public Mainframe() {
         initComponents();
         
 getCategoryList();
+getequipmentlist();
+
+
     }
 
     
@@ -68,6 +81,40 @@ getCategoryList();
     
     
     
+    public void getequipmentlist(){
+        
+        Jpnl_equipmentlist.removeAll();
+    
+    String get = "SELECT model_id, equipment_name, brand_name, product_image, quantity, renting_price FROM equipment_info"; //step 1
+        try {
+            pts = DBConnect.getInstance().con.prepareStatement(get); //step 2
+            
+            rs = pts.executeQuery(); //step 3
+            
+            for(int i = 0; rs.next(); i++){
+            
+                photo = rs.getBytes(4);
+                equipimage = new ImageIcon(photo);
+                
+            modequipcard(equipimage, rs.getString(1), rs.getString(2), rs.getString(3), rs.getInt(5), rs.getDouble(6), i);
+            
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(Mainframe.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     
@@ -91,6 +138,8 @@ getCategoryList();
         Jlbl_registry = new javax.swing.JLabel();
         Jlbl_settings = new javax.swing.JLabel();
         Jlbl_accounts = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
+        jLabel4 = new javax.swing.JLabel();
         jpnl_equipcategory = new javax.swing.JPanel();
         Jlbl_addcategory = new javax.swing.JLabel();
         jLabel1 = new javax.swing.JLabel();
@@ -128,7 +177,7 @@ getCategoryList();
         Jlbl_equipmanage.setBackground(new java.awt.Color(220, 220, 220));
         Jlbl_equipmanage.setFont(new java.awt.Font("Eras Bold ITC", 0, 10)); // NOI18N
         Jlbl_equipmanage.setForeground(new java.awt.Color(51, 51, 51));
-        Jlbl_equipmanage.setIcon(new javax.swing.ImageIcon(getClass().getResource("/newIcons/cmralens.png"))); // NOI18N
+        Jlbl_equipmanage.setIcon(new javax.swing.ImageIcon(getClass().getResource("/newIcons/camera.png"))); // NOI18N
         Jlbl_equipmanage.setText("EQUIPMENT MANAGEMENT");
         Jlbl_equipmanage.setOpaque(true);
         Jlbl_equipmanage.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -204,6 +253,14 @@ getCategoryList();
             }
         });
         jpnl_navbar.add(Jlbl_accounts, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 290, 190, 40));
+
+        jLabel2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/newIcons/cmralens.png"))); // NOI18N
+        jpnl_navbar.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 20, -1, -1));
+
+        jLabel4.setFont(new java.awt.Font("Eras Bold ITC", 0, 16)); // NOI18N
+        jLabel4.setForeground(new java.awt.Color(0, 51, 204));
+        jLabel4.setText("CMRZA");
+        jpnl_navbar.add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 40, -1, -1));
 
         getContentPane().add(jpnl_navbar, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 190, 500));
 
@@ -353,6 +410,10 @@ getCategoryList();
         Jlbl_settings.setBackground(new Color(220,220,220));
     }//GEN-LAST:event_Jlbl_settingsMouseExited
 
+    
+    
+    
+    
     private void Jlbl_addcategoryMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Jlbl_addcategoryMouseClicked
         // 1. write the query command 2. prepare statement 3.execute
         
@@ -363,8 +424,7 @@ getCategoryList();
 
     private void Jlbl_addequipMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Jlbl_addequipMouseClicked
 
-        addequipment newequip = new addequipment();
-
+        addequipment newequip = new addequipment(this);
         newequip.setVisible(true);
 
     }//GEN-LAST:event_Jlbl_addequipMouseClicked
@@ -385,6 +445,13 @@ getCategoryList();
         Jlbl_addequip.setBackground(new Color(220,220,220));
     }//GEN-LAST:event_Jlbl_addequipMouseExited
 
+    
+    
+    
+    
+    
+    
+    
     public void modCategoryCard (String categoryName, int i){
     
         categoryCard details = new categoryCard();
@@ -414,6 +481,76 @@ getCategoryList();
         Jpnl_categorylist.setPreferredSize(new Dimension(newWidth, 65));
         Jpnl_categorylist.revalidate();
         Jpnl_categorylist.repaint();
+    
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+        public void modequipcard (
+                ImageIcon equipimage, 
+                String equipID, 
+                String equipname, 
+                String equipbrand, 
+                int quantity, 
+                double rentPrice, 
+                int i){
+    
+            
+        equipmentcard details = new equipmentcard();
+        
+        
+        Image equipImageScaled = equipimage.getImage().getScaledInstance (180,180, Image.SCALE_SMOOTH);
+        
+        ImageIcon equipImageScale = new ImageIcon (equipImageScaled);
+        
+        
+        details.jlbl_equipimage.setIcon(equipImageScale);
+        details.jlbl_equipID.setText(equipID);
+        details.jlbl_equipname.setText(equipname);
+        details.jlbl_equipbrand.setText(equipbrand);
+        details.jlbl_quantity.setText("QTY:" + Integer.toString(quantity));
+        details.jlbl_rentprice.setText("P" + Double.toString(rentPrice));
+        
+        
+            details.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+            editequipment editPopup = new editequipment(Mainframe.this, equipID);
+            editPopup.setVisible(true);
+            }
+        });
+
+        
+        
+        
+        int col = i % 6;
+        int row = i / 1;
+        
+        int x = col * 180;
+        
+        
+        details.setBounds(x, 0, 180, 270);
+        
+        Jpnl_equipmentlist.add(details);
+        
+        int newWidth;
+        if (col == 0){
+        
+            newWidth = 2;
+        }else{
+        newWidth = (i + 1) *180;
+        
+        }
+        
+        int numRows = ((i+1) + 1) / 1;
+        Jpnl_equipmentlist.setPreferredSize(new Dimension(newWidth, 270));
+        Jpnl_equipmentlist.revalidate();
+        Jpnl_equipmentlist.repaint();
     
     }
     
@@ -473,7 +610,9 @@ getCategoryList();
     private javax.swing.JPanel Jpnl_categorylist;
     private javax.swing.JPanel Jpnl_equipmentlist;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JPanel jpnl_equipcategory;

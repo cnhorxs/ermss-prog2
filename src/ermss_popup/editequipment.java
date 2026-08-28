@@ -25,18 +25,23 @@ import java.awt.Color;
 import java.sql.SQLException;
 import javax.swing.UIManager;
 import ermss.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 
 /**
  *
  * @author ACLCSlab1
  */
-public class addequipment extends javax.swing.JFrame {
+public class editequipment extends javax.swing.JFrame {
 
     /**
      * Creates new form addequipment
      */
     
+    
+    Mainframe main;
+    String targetModelID;
     String speclist = null;
     PreparedStatement pts;
     
@@ -47,7 +52,7 @@ public class addequipment extends javax.swing.JFrame {
     
     
     
-    public addequipment() {
+    public editequipment() {
         initComponents();
     
     jtxt_modelID.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "model ID");
@@ -62,10 +67,73 @@ public class addequipment extends javax.swing.JFrame {
     
     }
     
+    public editequipment(Mainframe main, String modelID) {
+        this(); 
+        this.main = main;
+        this.targetModelID = modelID;
+        
+        jtxt_modelID.setText(targetModelID);
+        jtxt_modelID.setEditable(false);
+        
+        loadEquipmentData();
+    }
     
-    Mainframe main;
     
-    public addequipment(Mainframe main) {
+    
+    
+    
+    private void loadEquipmentData() {
+        String query = "SELECT category_name, equipment_name, brand_name, product_image, specificatuion, quantity, renting_price, notes FROM equipment_info WHERE model_id = ?";
+        try {
+            pts = DBConnect.getInstance().con.prepareStatement(query);
+            pts.setString(1, targetModelID);
+            ResultSet rs = pts.executeQuery();
+
+            if (rs.next()) {
+                jcmb_catname.setSelectedItem(rs.getString("category_name"));
+                jtxt_equipname.setText(rs.getString("equipment_name"));
+                jtxt_brandname.setText(rs.getString("brand_name"));
+                
+                photo = rs.getBytes("product_image");
+                if (photo != null) {
+                    ImageIcon icon = new ImageIcon(photo);
+                    Image img = icon.getImage().getScaledInstance(jlbl_prodimage.getWidth(), jlbl_prodimage.getHeight(), Image.SCALE_SMOOTH);
+                    jlbl_prodimage.setIcon(new ImageIcon(img));
+                }
+
+                speclist = rs.getString("specificatuion");
+                jtxa_speclist.setText(speclist);
+                jtxt_quantity.setText(String.valueOf(rs.getInt("quantity")));
+                jtxt_rentingprice.setText(String.valueOf(rs.getDouble("renting_price")));
+                jtxa_notes.setText(rs.getString("notes"));
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(editequipment.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    public editequipment(Mainframe main) {
         initComponents();
         
         this.main = main;
@@ -265,7 +333,7 @@ public class addequipment extends javax.swing.JFrame {
         jLabel5.setBackground(new java.awt.Color(153, 153, 153));
         jLabel5.setFont(new java.awt.Font("Eras Bold ITC", 0, 14)); // NOI18N
         jLabel5.setForeground(new java.awt.Color(102, 102, 102));
-        jLabel5.setText("   equipment information");
+        jLabel5.setText(" edit  equipment information");
         jLabel5.setOpaque(true);
         jPanel1.add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 700, 30));
 
@@ -338,80 +406,65 @@ public class addequipment extends javax.swing.JFrame {
     private void jbtn_confirmActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbtn_confirmActionPerformed
 
         String modelID = jtxt_modelID.getText();
-        String catname = jcmb_catname.getSelectedItem().toString();
-        String equipname = jtxt_equipname.getText();
-        String brandname = jtxt_brandname.getText();
-        
-        int quantity = 0; 
-        double rentingprice = 0;
-        
-        if (jtxt_quantity.getText().isEmpty()){
+    String catname = jcmb_catname.getSelectedItem().toString();
+    String equipname = jtxt_equipname.getText();
+    String brandname = jtxt_brandname.getText();
+    
+    int quantity = 0; 
+    double rentingprice = 0;
+    
+    if (jtxt_quantity.getText().isEmpty()){
         quantity = 0;
         rentingprice = 0;
+    } else {
+        quantity = Integer.parseInt(jtxt_quantity.getText());
+        rentingprice = Double.parseDouble(jtxt_rentingprice.getText());
+    }
+    
+    String notes = jtxa_notes.getText();
 
+    if (modelID.isEmpty() ||
+        catname.isEmpty() ||
+        equipname.isEmpty() ||
+        brandname.isEmpty() ||
+        quantity == 0 ||
+        rentingprice == 0 ||
+        speclist.isEmpty()) {
+
+        JOptionPane.showMessageDialog(this, "parang awa mo na, fill all forms");
         
-        }else{
+    } else {
+        String updateequip = "UPDATE equipment_info SET category_name = ?, equipment_name = ?, brand_name = ?, product_image = ?, specificatuion = ?, quantity = ?, renting_price = ?, notes = ? WHERE model_id = ?";
         
-            quantity = Integer.parseInt(jtxt_quantity.getText());
-            rentingprice = Double.parseDouble(jtxt_rentingprice.getText());
+        try {
+            pts = DBConnect.getInstance().con.prepareStatement(updateequip);
             
-        }
-        
-         String notes = jtxa_notes.getText();
-
-         if (modelID.isEmpty()||
-                 catname.isEmpty()||
-                 equipname.isEmpty()||
-                 brandname.isEmpty()||
-                 quantity == 0 ||
-                 rentingprice == 0 ||
-                 speclist.isEmpty()){
-         
-         JOptionPane.showMessageDialog(this, "pls fill all forms");
-             
-         }else{
-         
-             String newequip = "INSERT INTO equipment_info (model_id, category_name, equipment_name, brand_name, product_image, specificatuion, quantity, renting_price, notes ) VALUES (?,?,?,?,?,?,?,?,?)";
-             
-            try {
-                pts = DBConnect.getInstance().con.prepareStatement(newequip);
+            pts.setString(1, catname);
+            pts.setString(2, equipname);
+            pts.setString(3, brandname);
+            pts.setBytes(4, photo);
+            pts.setString(5, speclist);
+            pts.setInt(6, quantity);
+            pts.setDouble(7, rentingprice);
+            pts.setString(8, notes);
+            pts.setString(9, modelID); 
+            
+            int rowsAffected = pts.executeUpdate();
+            
+            if (rowsAffected > 0) {
+                JOptionPane.showMessageDialog(this, "Updated successfully");
                 
-                pts.setString(1, modelID);
-                pts.setString(2, catname);
-                pts.setString(3, equipname);
-                pts.setString(4, brandname);
-                pts.setBytes(5, photo);
-                pts.setString(6, speclist);
-                pts.setInt(7, quantity);
-                pts.setDouble(8, rentingprice);
-                pts.setString(9, notes);
-                
-                boolean state = pts.execute();
-                
-                if(state == false){
-                    JOptionPane.showMessageDialog(this, "added successfully");
-                    
-                    jtxt_modelID.setText("");
-                    jtxt_equipname.setText("");
-                    jtxt_brandname.setText("");
-                    jlbl_prodimage.setText("product image");
-                    speclist = "";
-                    
-                    jtxt_quantity.setText("");
-                    jtxt_rentingprice.setText("");
-                    jtxa_speclist.setText("");
-                    jtxa_notes.setText("");
-                    
-                    
-                    main.getequipmentlist();
-                    
-                    this.dispose();
-
+                if (main != null) {
+                    main.getequipmentlist(); 
                 }
-            } catch (SQLException ex) {
-                Logger.getLogger(addequipment.class.getName()).log(Level.SEVERE, null, ex);
+                
+                this.dispose();
             }
-         }
+        } catch (SQLException ex) {
+            Logger.getLogger(editequipment.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+        
     }//GEN-LAST:event_jbtn_confirmActionPerformed
 
     
@@ -478,7 +531,7 @@ public class addequipment extends javax.swing.JFrame {
             
             
         } catch (IOException ex) {
-            Logger.getLogger(addequipment.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(editequipment.class.getName()).log(Level.SEVERE, null, ex);
         }
         
         File image = new File(filename);
@@ -498,9 +551,9 @@ public class addequipment extends javax.swing.JFrame {
             
             
         } catch (FileNotFoundException ex) {
-            Logger.getLogger(addequipment.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(editequipment.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
-            Logger.getLogger(addequipment.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(editequipment.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jlbl_uploadprodimageMouseClicked
 
@@ -550,7 +603,38 @@ public class addequipment extends javax.swing.JFrame {
     /**
      * @param args the command line arguments
      */
-    
+    public static void main(String args[]) {
+        /* Set the Nimbus look and feel */
+        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         */
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (ClassNotFoundException ex) {
+            java.util.logging.Logger.getLogger(editequipment.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (InstantiationException ex) {
+            java.util.logging.Logger.getLogger(editequipment.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            java.util.logging.Logger.getLogger(editequipment.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(editequipment.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        //</editor-fold>
+        //</editor-fold>
+
+        /* Create and display the form */
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new editequipment().setVisible(true);
+            }
+        });
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel jLabel3;
