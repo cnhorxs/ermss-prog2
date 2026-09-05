@@ -25,6 +25,7 @@ import java.awt.Color;
 import java.sql.SQLException;
 import javax.swing.UIManager;
 import ermss.*;
+import java.sql.ResultSet;
 
 
 /**
@@ -39,6 +40,8 @@ public class addequipment extends javax.swing.JFrame {
     
     String speclist = null;
     PreparedStatement pts;
+    ResultSet rs;
+    
     
     String filename = null;
     byte[] photo = null;
@@ -80,8 +83,27 @@ public class addequipment extends javax.swing.JFrame {
     jtxa_notes.setLineWrap(true);
     jtxa_speclist.disable();
     
+    getcategories();
+    
     }
     
+    public void getcategories(){
+        
+        String categoryList = "SELECT * FROM categories";
+        try {
+            pts = DBConnect.getInstance().con.prepareStatement(categoryList);
+            
+            rs = pts.executeQuery();
+            while(rs.next()){
+                
+                jcmb_catname.addItem(rs.getString(1));
+            
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(addequipment.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
             
 
 
@@ -172,7 +194,6 @@ public class addequipment extends javax.swing.JFrame {
         });
         jPanel1.add(jtxt_rentingprice, new org.netbeans.lib.awtextra.AbsoluteConstraints(310, 260, 180, 30));
 
-        jcmb_catname.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "lens" }));
         jcmb_catname.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jcmb_catnameActionPerformed(evt);
@@ -325,7 +346,9 @@ public class addequipment extends javax.swing.JFrame {
     }//GEN-LAST:event_jtxt_quantityActionPerformed
 
     private void jbtn_cancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbtn_cancelActionPerformed
-        // TODO add your handling code here:
+
+        this.dispose();
+
     }//GEN-LAST:event_jbtn_cancelActionPerformed
 
     

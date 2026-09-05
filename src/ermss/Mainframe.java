@@ -36,6 +36,9 @@ public class Mainframe extends javax.swing.JFrame {
      byte [] photo = null;
      ImageIcon equipimage;
      
+     registrypanel newregistry = new registrypanel();
+
+     
      
      
      
@@ -45,7 +48,10 @@ public class Mainframe extends javax.swing.JFrame {
         
 getCategoryList();
 getequipmentlist();
+callpanels();
 
+jpnl_equipcategory.setVisible(false);
+newregistry.setVisible(false);
 
     }
 
@@ -153,7 +159,6 @@ getequipmentlist();
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Equipment renting management and sales system");
         setResizable(false);
-        getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jpnl_navbar.setBackground(new java.awt.Color(220, 220, 220));
         jpnl_navbar.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
@@ -181,6 +186,9 @@ getequipmentlist();
         Jlbl_equipmanage.setText("EQUIPMENT MANAGEMENT");
         Jlbl_equipmanage.setOpaque(true);
         Jlbl_equipmanage.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                Jlbl_equipmanageMouseClicked(evt);
+            }
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 Jlbl_equipmanageMouseEntered(evt);
             }
@@ -213,6 +221,9 @@ getequipmentlist();
         Jlbl_registry.setText("REGISTRY");
         Jlbl_registry.setOpaque(true);
         Jlbl_registry.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                Jlbl_registryMouseClicked(evt);
+            }
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 Jlbl_registryMouseEntered(evt);
             }
@@ -261,8 +272,6 @@ getequipmentlist();
         jLabel4.setForeground(new java.awt.Color(0, 51, 204));
         jLabel4.setText("CMRZA");
         jpnl_navbar.add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 40, -1, -1));
-
-        getContentPane().add(jpnl_navbar, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 190, 500));
 
         jpnl_equipcategory.setBackground(new java.awt.Color(204, 204, 204));
         jpnl_equipcategory.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
@@ -356,7 +365,20 @@ getequipmentlist();
 
         jpnl_equipcategory.add(jScrollPane2, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 220, 690, 270));
 
-        getContentPane().add(jpnl_equipcategory, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 0, 710, 500));
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(jpnl_navbar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, 0)
+                .addComponent(jpnl_equipcategory, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jpnl_navbar, javax.swing.GroupLayout.PREFERRED_SIZE, 500, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addComponent(jpnl_equipcategory, javax.swing.GroupLayout.PREFERRED_SIZE, 500, javax.swing.GroupLayout.PREFERRED_SIZE)
+        );
 
         pack();
         setLocationRelativeTo(null);
@@ -445,6 +467,23 @@ getequipmentlist();
         Jlbl_addequip.setBackground(new Color(220,220,220));
     }//GEN-LAST:event_Jlbl_addequipMouseExited
 
+    private void Jlbl_registryMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Jlbl_registryMouseClicked
+
+        jpnl_equipcategory.setVisible(false);
+        
+        newregistry.setVisible(true);
+        
+        
+
+    }//GEN-LAST:event_Jlbl_registryMouseClicked
+
+    private void Jlbl_equipmanageMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Jlbl_equipmanageMouseClicked
+
+        newregistry.setVisible(false);
+        jpnl_equipcategory.setVisible(true);
+
+    }//GEN-LAST:event_Jlbl_equipmanageMouseClicked
+
     
     
     
@@ -501,7 +540,8 @@ getequipmentlist();
                 int i){
     
             
-        equipmentcard details = new equipmentcard();
+        equipmentcard details = new equipmentcard(this); //instance handling
+        // STUDY INSTANCE PASSING
         
         
         Image equipImageScaled = equipimage.getImage().getScaledInstance (180,180, Image.SCALE_SMOOTH);
@@ -517,13 +557,7 @@ getequipmentlist();
         details.jlbl_rentprice.setText("P" + Double.toString(rentPrice));
         
         
-            details.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-            editequipment editPopup = new editequipment(Mainframe.this, equipID);
-            editPopup.setVisible(true);
-            }
-        });
+
 
         
         
@@ -553,6 +587,15 @@ getequipmentlist();
         Jpnl_equipmentlist.repaint();
     
     }
+        
+        
+        public void callpanels(){
+        
+            newregistry.setBounds(190,0,710,550);
+            this.add(newregistry);
+        
+        
+        }
     
     
     
@@ -608,7 +651,7 @@ getequipmentlist();
     private javax.swing.JLabel Jlbl_sales;
     private javax.swing.JLabel Jlbl_settings;
     private javax.swing.JPanel Jpnl_categorylist;
-    private javax.swing.JPanel Jpnl_equipmentlist;
+    public javax.swing.JPanel Jpnl_equipmentlist;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;

@@ -4,6 +4,17 @@
  * and open the template in the editor.
  */
 package ermss_panels;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import ermss_popup.*; 
+import databaseconnection.*;
+import java.awt.Image;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.ImageIcon;
+import ermss.*;
+
 
 /**
  *
@@ -14,10 +25,36 @@ public class equipmentcard extends javax.swing.JPanel {
     /**
      * Creates new form equipmentcard
      */
+    
+    PreparedStatement pts;
+    ResultSet rs;
+    
+    
     public equipmentcard() {
         initComponents();
     }
 
+    
+    
+    Mainframe main;
+    
+    
+        public equipmentcard(Mainframe main) {
+        initComponents();
+        
+        this.main = main;
+        
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -37,6 +74,11 @@ public class equipmentcard extends javax.swing.JPanel {
 
         setBackground(new java.awt.Color(255, 255, 255));
         setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(102, 102, 102)));
+        addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                formMouseClicked(evt);
+            }
+        });
         setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jlbl_equipimage.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(204, 204, 204)));
@@ -64,6 +106,62 @@ public class equipmentcard extends javax.swing.JPanel {
         jlbl_equipbrand.setText("canon");
         add(jlbl_equipbrand, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 220, 160, 20));
     }// </editor-fold>//GEN-END:initComponents
+
+    private void formMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_formMouseClicked
+
+        String getEquipinfo = "SELECT * FROM equipment_info WHERE model_id = '" + jlbl_equipID.getText() + "' ";
+
+        try {
+            pts = DBConnect.getInstance().con.prepareStatement(getEquipinfo);
+            
+            rs = pts.executeQuery();
+            
+            editequipment edit = new editequipment(this, main);
+            
+            edit.jtxt_modelID.setText(rs.getString(1));
+            edit.jcmb_catname.setSelectedItem(rs.getString(2));
+            edit.jtxt_equipname.setText(rs.getString(3));
+            edit.jtxt_brandname.setText(rs.getString(4));
+            //edit.jtxt_quantity.setText(rs.getString(5));
+            edit.jtxa_speclist.setText(rs.getString(6));
+            edit.jtxt_quantity.setText(rs.getString(7));
+            edit.jtxt_rentingprice.setText(rs.getString(8));
+            edit.jtxa_notes.setText(rs.getString(9));
+
+
+             
+             
+             
+             
+             byte[] photo = rs.getBytes(5);
+             ImageIcon image = new ImageIcon(photo);
+             Image imagescale = image.getImage();
+             Image imagescaled = imagescale.getScaledInstance(edit.jlbl_prodimage.getWidth(), 
+                                                              edit.jlbl_prodimage.getHeight(), Image.SCALE_SMOOTH);
+             
+
+             image = new ImageIcon (imagescaled);
+             
+             
+             edit.jlbl_prodimage.setIcon(image);
+             
+             edit.initialmodelID = rs.getString(1);
+             
+             edit.photo = rs.getBytes(5);
+                     
+             edit.setVisible(true);
+
+
+
+
+
+            
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(equipmentcard.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }//GEN-LAST:event_formMouseClicked
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
