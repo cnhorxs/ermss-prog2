@@ -8,6 +8,32 @@ import com.formdev.flatlaf.FlatClientProperties;
 import java.awt.Component;
 import javax.swing.JPanel;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import databaseconnection.*;
+import ermss.*;
+import java.awt.Image;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.ImageIcon;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+
+
+
+
+
 /**
  *
  * @author charl_pxdrf1n
@@ -17,9 +43,83 @@ public class addrenter extends javax.swing.JFrame {
     /**
      * Creates new form addrenter
      */
+    
+    PreparedStatement pts;
+    ResultSet rs;
+    
+    
+    ArrayList<String> equipinfo = new ArrayList<>();
+    double equiprentingprice;
+    int equipquantity; // stores current equip in data base
+    LocalDate duedate;
+    String eventinfo;
+    double change, totalpayable;
+    public int rentquantity;
+    DateTimeFormatter formatter;
+    String borroweddate;
+    
+    byte [] equipImage = null;
+    byte [] contractfile = null;
+    byte[] uploadedDocu = null;
+
+    
+    ResultSet equiprs;
+    //String LocalDate;
+
+
+
+    
+    ArrayList<String> personalInfo = new ArrayList<>();
+   
+
+
+  
+    
     public addrenter() {
         initComponents();
   
+            jtxt_fname.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "first name");
+            jtxt_mname.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "middle name");
+            jtxt_lname.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "last name");
+            jtxt_cnum.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "contact number");
+            jtxt_mail.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "gmail");
+            jtxt_address.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "address");
+            jlbl_govid.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "goverment ID");
+            
+            jtxa_spec.disable();
+            jtxt_Quantity.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "quantity");
+            jtxt_duedate.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "DD-MM-YYYY");
+            jtxt_eventinfo.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "event information");
+            jtxa_transummary.disable();
+            
+            jtxt_payment.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "payment");
+        
+            jcmb_equipment.removeAllItems();
+            jcmb_category.removeAllItems();
+            
+            String getcategories = "SELECT * FROM categories";
+            
+        try {
+            pts = DBConnect.getInstance().con.prepareStatement(getcategories);
+            rs = pts.executeQuery();
+            while(rs.next()){
+            jcmb_category.addItem(rs.getString(1));
+            
+            }   
+        } catch (SQLException ex) {
+            Logger.getLogger(addrenter.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        //comboActionListeners();
+        
+        comboActionListeners();
+            
+            
+        //NO TIME AND DATE IS SHOWING--------------------------
+        formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        LocalDate currentDate = LocalDate.now();
+        borroweddate = currentDate.format(formatter);
+        jlbl_borroweddate.setText(borroweddate);
     }
 
     /**
@@ -37,7 +137,6 @@ public class addrenter extends javax.swing.JFrame {
         jLabel2 = new javax.swing.JLabel();
         jcmb_equipment = new javax.swing.JComboBox<>();
         jcmb_category = new javax.swing.JComboBox<>();
-        jlbl_totalpayable = new javax.swing.JLabel();
         jLabel6 = new javax.swing.JLabel();
         jlbl_equipimage = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -46,12 +145,13 @@ public class addrenter extends javax.swing.JFrame {
         jLabel9 = new javax.swing.JLabel();
         jLabel10 = new javax.swing.JLabel();
         jtxt_eventinfo = new javax.swing.JTextField();
-        jLabel11 = new javax.swing.JLabel();
         jtxt_duedate = new javax.swing.JTextField();
         jlbl_borroweddate = new javax.swing.JLabel();
         jLabel13 = new javax.swing.JLabel();
         jbtn_totransum = new javax.swing.JButton();
         jbtn_backpersonalinfo = new javax.swing.JButton();
+        jLabel12 = new javax.swing.JLabel();
+        jtxt_Quantity = new javax.swing.JTextField();
         jpnl_finalizedtransac = new javax.swing.JPanel();
         jLabel3 = new javax.swing.JLabel();
         jScrollPane2 = new javax.swing.JScrollPane();
@@ -61,6 +161,7 @@ public class addrenter extends javax.swing.JFrame {
         jtxt_payment = new javax.swing.JTextField();
         jbtn_backrentinfo = new javax.swing.JButton();
         jbtn_confirm = new javax.swing.JButton();
+        jLabel15 = new javax.swing.JLabel();
         jpnl_personalinfo = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jtxt_fname = new javax.swing.JTextField();
@@ -73,6 +174,7 @@ public class addrenter extends javax.swing.JFrame {
         jlbl_govid = new javax.swing.JLabel();
         jbtn_cancel = new javax.swing.JButton();
         jbtn_torentinfo = new javax.swing.JButton();
+        jLabel14 = new javax.swing.JLabel();
 
         jTextArea3.setColumns(20);
         jTextArea3.setRows(5);
@@ -102,10 +204,6 @@ public class addrenter extends javax.swing.JFrame {
         jcmb_category.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
         jpnl_rentinginfo.add(jcmb_category, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 30, 130, -1));
 
-        jlbl_totalpayable.setForeground(new java.awt.Color(102, 102, 102));
-        jlbl_totalpayable.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
-        jpnl_rentinginfo.add(jlbl_totalpayable, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 380, 110, 20));
-
         jLabel6.setForeground(new java.awt.Color(102, 102, 102));
         jLabel6.setText("select category:");
         jpnl_rentinginfo.add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 10, -1, -1));
@@ -132,34 +230,29 @@ public class addrenter extends javax.swing.JFrame {
 
         jLabel10.setForeground(new java.awt.Color(102, 102, 102));
         jLabel10.setText("due date:");
-        jpnl_rentinginfo.add(jLabel10, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 260, -1, -1));
+        jpnl_rentinginfo.add(jLabel10, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 270, 60, -1));
 
         jtxt_eventinfo.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jtxt_eventinfoActionPerformed(evt);
             }
         });
-        jpnl_rentinginfo.add(jtxt_eventinfo, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 320, 260, -1));
+        jpnl_rentinginfo.add(jtxt_eventinfo, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 250, 130, 100));
 
-        jLabel11.setForeground(new java.awt.Color(102, 102, 102));
-        jLabel11.setText("total payable:");
-        jpnl_rentinginfo.add(jLabel11, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 360, -1, -1));
-
-        jtxt_duedate.setText("due date");
         jtxt_duedate.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jtxt_duedateActionPerformed(evt);
             }
         });
-        jpnl_rentinginfo.add(jtxt_duedate, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 280, 100, -1));
+        jpnl_rentinginfo.add(jtxt_duedate, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 290, 110, -1));
 
         jlbl_borroweddate.setForeground(new java.awt.Color(102, 102, 102));
         jlbl_borroweddate.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
-        jpnl_rentinginfo.add(jlbl_borroweddate, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 280, 110, 20));
+        jpnl_rentinginfo.add(jlbl_borroweddate, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 250, 110, 20));
 
         jLabel13.setForeground(new java.awt.Color(102, 102, 102));
         jLabel13.setText("borrowed date:");
-        jpnl_rentinginfo.add(jLabel13, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 260, -1, -1));
+        jpnl_rentinginfo.add(jLabel13, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 230, -1, -1));
 
         jbtn_totransum.setText("next");
         jbtn_totransum.addActionListener(new java.awt.event.ActionListener() {
@@ -167,7 +260,7 @@ public class addrenter extends javax.swing.JFrame {
                 jbtn_totransumActionPerformed(evt);
             }
         });
-        jpnl_rentinginfo.add(jbtn_totransum, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 350, -1, -1));
+        jpnl_rentinginfo.add(jbtn_totransum, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 370, 110, -1));
 
         jbtn_backpersonalinfo.setText("back");
         jbtn_backpersonalinfo.addActionListener(new java.awt.event.ActionListener() {
@@ -175,7 +268,18 @@ public class addrenter extends javax.swing.JFrame {
                 jbtn_backpersonalinfoActionPerformed(evt);
             }
         });
-        jpnl_rentinginfo.add(jbtn_backpersonalinfo, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 380, -1, -1));
+        jpnl_rentinginfo.add(jbtn_backpersonalinfo, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 370, 110, -1));
+
+        jLabel12.setForeground(new java.awt.Color(102, 102, 102));
+        jLabel12.setText("quantity:");
+        jpnl_rentinginfo.add(jLabel12, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 310, -1, -1));
+
+        jtxt_Quantity.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jtxt_QuantityActionPerformed(evt);
+            }
+        });
+        jpnl_rentinginfo.add(jtxt_Quantity, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 330, 110, -1));
 
         getContentPane().add(jpnl_rentinginfo, new org.netbeans.lib.awtextra.AbsoluteConstraints(300, 0, 300, 450));
 
@@ -204,10 +308,10 @@ public class addrenter extends javax.swing.JFrame {
                 jbtn_uploadcontractActionPerformed(evt);
             }
         });
-        jpnl_finalizedtransac.add(jbtn_uploadcontract, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 320, -1, -1));
+        jpnl_finalizedtransac.add(jbtn_uploadcontract, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 320, 80, -1));
 
         jlbl_contract.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
-        jpnl_finalizedtransac.add(jlbl_contract, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 320, 200, 20));
+        jpnl_finalizedtransac.add(jlbl_contract, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 320, 140, 22));
 
         jtxt_payment.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -231,6 +335,10 @@ public class addrenter extends javax.swing.JFrame {
             }
         });
         jpnl_finalizedtransac.add(jbtn_confirm, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 400, 130, -1));
+
+        jLabel15.setForeground(new java.awt.Color(102, 102, 102));
+        jLabel15.setText("Contract:");
+        jpnl_finalizedtransac.add(jLabel15, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 320, -1, 20));
 
         getContentPane().add(jpnl_finalizedtransac, new org.netbeans.lib.awtextra.AbsoluteConstraints(600, 0, 300, 450));
 
@@ -295,10 +403,10 @@ public class addrenter extends javax.swing.JFrame {
                 jbtn_goviduploadActionPerformed(evt);
             }
         });
-        jpnl_personalinfo.add(jbtn_govidupload, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 340, -1, -1));
+        jpnl_personalinfo.add(jbtn_govidupload, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 380, 130, 30));
 
         jlbl_govid.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
-        jpnl_personalinfo.add(jlbl_govid, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 340, 200, 20));
+        jpnl_personalinfo.add(jlbl_govid, new org.netbeans.lib.awtextra.AbsoluteConstraints(70, 340, 220, 20));
 
         jbtn_cancel.setText("cancel");
         jbtn_cancel.addActionListener(new java.awt.event.ActionListener() {
@@ -306,7 +414,7 @@ public class addrenter extends javax.swing.JFrame {
                 jbtn_cancelActionPerformed(evt);
             }
         });
-        jpnl_personalinfo.add(jbtn_cancel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 410, 130, -1));
+        jpnl_personalinfo.add(jbtn_cancel, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 410, 130, -1));
 
         jbtn_torentinfo.setText("next");
         jbtn_torentinfo.addActionListener(new java.awt.event.ActionListener() {
@@ -314,7 +422,11 @@ public class addrenter extends javax.swing.JFrame {
                 jbtn_torentinfoActionPerformed(evt);
             }
         });
-        jpnl_personalinfo.add(jbtn_torentinfo, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 410, 130, -1));
+        jpnl_personalinfo.add(jbtn_torentinfo, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 380, 130, -1));
+
+        jLabel14.setForeground(new java.awt.Color(102, 102, 102));
+        jLabel14.setText("Valid ID:");
+        jpnl_personalinfo.add(jLabel14, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 340, -1, 20));
 
         getContentPane().add(jpnl_personalinfo, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 300, 450));
 
@@ -346,7 +458,39 @@ public class addrenter extends javax.swing.JFrame {
     }//GEN-LAST:event_jtxt_addressActionPerformed
 
     private void jbtn_goviduploadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbtn_goviduploadActionPerformed
-        // TODO add your handling code here:
+
+         JFileChooser chooser = new JFileChooser();
+        chooser.showOpenDialog(null);
+        File f = chooser.getSelectedFile();
+        String fileName = f.getAbsolutePath();
+        
+        jlbl_govid.setText(fileName.substring(fileName.lastIndexOf('\\')+1));
+        
+        File file = new File(fileName);
+        FileInputStream fis;
+        
+        try {
+            fis = new FileInputStream(file);
+            
+            fis = new FileInputStream(file);
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            byte[]buf = new byte [1024];
+            for(int readNum; (readNum = fis.read(buf)) != -1;){
+                bos.write(buf, 0, readNum);
+            }
+           uploadedDocu = bos.toByteArray();
+            
+            
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(addrenter.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(addrenter.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+
+
+
+
     }//GEN-LAST:event_jbtn_goviduploadActionPerformed
 
     private void jbtn_cancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbtn_cancelActionPerformed
@@ -357,12 +501,29 @@ public class addrenter extends javax.swing.JFrame {
 
     private void jbtn_torentinfoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbtn_torentinfoActionPerformed
 
+       if(jtxt_fname.getText().isEmpty() || jtxt_mname.getText().isEmpty() || jtxt_lname.getText().isEmpty()
+         || jtxt_cnum.getText().isEmpty() || jtxt_mail.getText().isEmpty() || jtxt_address.getText().isEmpty()
+         || jlbl_govid.getText().equals("Valid ID")){
+            
+            JOptionPane.showMessageDialog(this, "Please do not add Blank Spaces");
+       }else{
+            
+            personalInfo.add(jtxt_fname.getText());
+            personalInfo.add(jtxt_mname.getText());
+            personalInfo.add(jtxt_lname.getText());
+            personalInfo.add(jtxt_cnum.getText());
+            personalInfo.add(jtxt_mail.getText());
+            personalInfo.add(jtxt_address.getText());
+        
+        
         this.setSize(615, 490);
         this.setLocationRelativeTo(null);
         this.revalidate(); //refresh main/frame
         this.repaint();
 
         disableComponents(jpnl_personalinfo, false);
+        
+       }
 
     }//GEN-LAST:event_jbtn_torentinfoActionPerformed
 
@@ -376,15 +537,53 @@ public class addrenter extends javax.swing.JFrame {
 
     private void jbtn_totransumActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbtn_totransumActionPerformed
 
-        this.setSize(915, 490);
-        this.setLocationRelativeTo(null);
-        this.revalidate(); //refresh main/frame
-        this.repaint();
+        if(equipinfo.get(0).isEmpty()||
+                jtxt_Quantity.getText().isEmpty()||
+                jtxt_duedate.getText().isEmpty()||
+                jtxt_eventinfo.getText().isEmpty()){
+            
+            
+                JOptionPane.showMessageDialog(this, "no blank spaces");
+           
+        } else {
+    
+            rentquantity = Integer.parseInt(jtxt_Quantity.getText());
+            if(equipquantity >= rentquantity){
+
+                    duedate = LocalDate.parse(jtxt_duedate.getText(), formatter);
+                    eventinfo = jtxt_eventinfo.getText();
+
+                    long totalrentingdays = ChronoUnit.DAYS.between(LocalDate.parse(borroweddate, formatter), duedate);
+
+                    totalpayable = (rentquantity * equiprentingprice) * totalrentingdays;
+                    System.out.println(totalrentingdays);
+                    System.out.println(equiprentingprice);
+                    System.out.println(rentquantity);
+
+                    JOptionPane.showMessageDialog(this, "total payable: " + totalpayable);
+
+                }else{
+
+                    JOptionPane.showMessageDialog(this, equipinfo.get(2) + " current have " + equipinfo.get(5) + "stocks/s");
+
+
+                }
+
+
+                this.setSize(915, 490);
+                this.setLocationRelativeTo(null);
+                this.revalidate(); //refresh main/frame
+                this.repaint();
+
+
+
+
+                disableComponents(jpnl_rentinginfo, false);
+    
+        }
         
-        disableComponents(jpnl_rentinginfo, false);
-
-
-
+        transummary ();
+        
     }//GEN-LAST:event_jbtn_totransumActionPerformed
 
     private void jbtn_backpersonalinfoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbtn_backpersonalinfoActionPerformed
@@ -403,7 +602,41 @@ public class addrenter extends javax.swing.JFrame {
     }//GEN-LAST:event_jbtn_backpersonalinfoActionPerformed
 
     private void jbtn_uploadcontractActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbtn_uploadcontractActionPerformed
-        // TODO add your handling code here:
+
+JFileChooser chooser = new JFileChooser();
+        chooser.showOpenDialog(null);
+        File f = chooser.getSelectedFile();
+        String fileName = f.getAbsolutePath();
+        
+        jlbl_contract.setText(fileName.substring(fileName.lastIndexOf('\\')+1));
+        
+        File file = new File(fileName);
+        FileInputStream fis;
+        
+        try {
+            fis = new FileInputStream(file);
+            
+            fis = new FileInputStream(file);
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            byte[]buf = new byte [1024];
+            for(int readNum; (readNum = fis.read(buf)) != -1;){
+                bos.write(buf, 0, readNum);
+            }
+           contractfile = bos.toByteArray();
+            
+            
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(addrenter.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(addrenter.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+
+
+
+
+
+
     }//GEN-LAST:event_jbtn_uploadcontractActionPerformed
 
     private void jtxt_paymentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtxt_paymentActionPerformed
@@ -419,17 +652,146 @@ public class addrenter extends javax.swing.JFrame {
         
         disableComponents(jpnl_rentinginfo, true);
 
-
     }//GEN-LAST:event_jbtn_backrentinfoActionPerformed
 
+    
+    
+    
+    
+    
+    
+    
     private void jbtn_confirmActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbtn_confirmActionPerformed
-        // TODO add your handling code here:
+
+        boolean addrenterstate = true;
+        
+        if(jlbl_contract.getText().equals("Renting contract") || totalpayable > Integer.parseInt(jtxt_payment.getText())){
+            
+            JOptionPane.showMessageDialog(this, "please input valid info");
+            
+        }else{
+            
+            String addrenter = "INSERT INTO renter_info(first_name, middle_name, last_name, contact_no, email, address, valid_id)"
+                    + "VALUES (?,?,?,?,?,?,?)";
+        
+            try {
+                pts = DBConnect.getInstance().con.prepareStatement(addrenter);
+                
+                pts.setString(1, personalInfo.get(0));
+                pts.setString(2, personalInfo.get(1));
+                pts.setString(3, personalInfo.get(2));
+                pts.setString(4, personalInfo.get(3));
+                pts.setString(5, personalInfo.get(4));
+                pts.setString(6, personalInfo.get(4));
+                pts.setBytes(7,  uploadedDocu);
+                
+                 addrenterstate = pts.execute();
+                
+            } catch (SQLException ex) {
+                Logger.getLogger(addrenter.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+            
+            
+            if(addrenterstate == false){
+            
+            
+            
+            String renterID = null;
+            String getrenterID = "SELECT MAX (renter_ID) FROM renter_info";
+            
+            try {
+                pts= DBConnect.getInstance().con.prepareStatement(getrenterID);
+                
+                rs = pts.executeQuery();
+                renterID = rs.getString(1);
+                
+            } catch (SQLException ex) {
+                Logger.getLogger(addrenter.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        
+            
+            
+            
+            
+            
+            String addrentinfo = "INSERT INTO rent_info (renter_id, category_name, model_id, borrowed_date, due_date, event_info, quantity, total_payable, contract_type,status) VALUES(?,?,?,?,?,?,?,?,?,?)";
+            
+            
+            try {
+                pts = DBConnect.getInstance().con.prepareStatement(addrentinfo);
+                
+                pts.setString(1, renterID);
+                pts.setString(2, equipinfo.get(1));
+                pts.setString(3, equipinfo.get(1));
+                pts.setString(4, borroweddate);
+                pts.setString(5, duedate.toString());
+                pts.setString(6, eventinfo);
+                pts.setInt(7, rentquantity);
+                pts.setDouble(8, totalpayable);
+                pts.setBytes(9, contractfile);
+                pts.setString(10, "Ongoing");
+                
+                boolean addRentState = pts.execute();
+                
+                if(addRentState == false){
+                
+                    JOptionPane.showMessageDialog(this, "Transaction confirmed \n" + "Change: P" + (Double.parseDouble(jtxt_payment.getText()) - totalpayable));
+                
+                    personalInfo.clear();;
+                    equipinfo.clear();
+                    
+                    jtxa_transummary.setText("");
+                    jtxa_spec.setText("");
+                    
+                    jlbl_govid.setText("Valid ID");
+                    jlbl_contract.setText("renting contract");
+                    
+                    jtxt_payment.setText("");
+                    jtxt_Quantity.setText("");
+                    jtxt_eventinfo.setText("");
+                    jtxt_duedate.setText("");
+                    
+                    jtxt_fname.setText("");
+                    jtxt_lname.setText("");
+                    jtxt_mname.setText("");
+                    jtxt_cnum.setText("");
+                    jtxt_mail.setText("");
+                    jtxt_address.setText("");
+                    
+                    this.dispose();
+                }
+                
+                
+                
+            } catch (SQLException ex) {
+                Logger.getLogger(addrenter.class.getName()).log(Level.SEVERE, null, ex);
+            }
+          }
+        }
+
     }//GEN-LAST:event_jbtn_confirmActionPerformed
+
+    //EXAM --- AFTER CLICKING CONFIRM A THE TABLE SHOULD BE POPULATED. SORT (ONGOING-) ALL. ONGOING. TASK. DUE. CATEGORY (ONGOING/ PAST DUE. CATEGORY)
+    // NEXT WEEK --- EDIT INFO
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    private void jtxt_QuantityActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtxt_QuantityActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jtxt_QuantityActionPerformed
 
     
     
     
-    //------------------- ASSIGNEMENT: PLACE HOLDERS
+    //------------------- ASSIGNEMENT-PLACE HOLDERS: FINISHED
     
     public void disableComponents(JPanel currentPanel, boolean isEnabled){
         
@@ -448,19 +810,144 @@ public class addrenter extends javax.swing.JFrame {
 
     }
     
+    
+    
+    
+    
+    
+    public void comboActionListeners(){
+    
+        jcmb_category.addActionListener(e->{
+            
+            jcmb_equipment.removeAllItems();
+            
+            String getEquipment = "SELECT model_id FROM equipment_info WHERE category_name = '" + jcmb_category.getSelectedItem().toString() +"' ";
+           
+            
+            try {
+                pts = DBConnect.getInstance().con.prepareStatement(getEquipment);
+                rs = pts.executeQuery();
+                
+                while(rs.next()){
+                    jcmb_equipment.addItem(rs.getString(1));
+                }
+                
+                
+            } catch (SQLException ex) {
+                Logger.getLogger(addrenter.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+            //comboActionListeners();
+            
+        });
+        
+        
+        
+        
+        
+        //JCOMBO BOX EQUIPMENT IS NOT POPULATED---------------------------------
+        
+        jcmb_equipment.addActionListener(e->{
+            
+            if(jcmb_equipment.getSelectedItem() == null){
+            
+            //jcmb_equipment.removeAllItems();
+            
+            }else{
+            
+            String getEquipment = "SELECT * FROM equipment_info WHERE model_id = '" + jcmb_equipment.getSelectedItem().toString() + "' ";
+           
+            
+            try {
+                pts = DBConnect.getInstance().con.prepareStatement(getEquipment);
+                equiprs = pts.executeQuery();
+                
+               equipinfo.clear();
+                
+                equipinfo.add(equiprs.getString(1));
+                equipinfo.add(equiprs.getString(2));
+                equipinfo.add(equiprs.getString(3));
+                equipinfo.add(equiprs.getString(4));
+                equipImage = equiprs.getBytes(5);
+                equipinfo.add(equiprs.getString(6));
+                
+                equipinfo.add(Integer.toString(equiprs.getInt(7)));
+                equipquantity = equiprs.getInt(7);
+                
+                equipinfo.add(Double.toString(equiprs.getDouble(8)));
+                equiprentingprice = equiprs.getDouble(8);
+                
+                jtxa_spec.setText(equiprs.getString(6));
+                
+                ImageIcon image = new ImageIcon(equipImage);
+                Image imageScale = image.getImage();
+                Image imageScaled = imageScale.getScaledInstance(jlbl_equipimage.getWidth(), jlbl_equipimage.getHeight(), Image.SCALE_SMOOTH);
+                
+                image = new ImageIcon(imageScaled);
+                jlbl_equipimage.setIcon(image);
+                 
 
-   /* 
-    public void setPanelEnabled (JPanel panel, boolean isEnabled) {
-    Component[] components = panel.getComponents();
-    for (Component component : components) {
-        component.setEnabled(isEnabled);
-        if (component instanceof JPanel) {
-            setPanelEnabled((JPanel) component, isEnabled); // Recursive call for nested panels
-        }
+                
+                
+            } catch (SQLException ex) {
+                Logger.getLogger(addrenter.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            }
+            
+        });
+        
+        
+    
+    
+    
+    
     }
-}
+    
+    
+    
+    
+    public void transummary (){
+    
+        jtxa_transummary.setText(
+        
+        "PERSONAL INFO INFORMATION ----------------------\n"
+                
+                
+                
+                + "FULL NAME:      " + personalInfo.get(2) +  ", " + personalInfo.get(0) +  ", " + personalInfo.get(1) + "\n"
+                + "CONTACT NUMBER: " + personalInfo.get(3) + "\n"
+                + "GMAIL:          " + personalInfo.get(4) + "\n"       
+                + "ADDRESS:        " + personalInfo.get(5) + "\n \n"       
+        
+                        
+                        
+        + "EQUIPMENT INFORMATION ----------------------\n" 
+                
 
-*/
+                + "MODEL ID:        " + equipinfo.get(0) + "\n"
+                + "EQUIPMENST NAME: " + equipinfo.get(2) + "\n"
+                + "BRAND NAME:      " + equipinfo.get(3) + "\n"
+                + "SPECIFICATIONS:  " + equipinfo.get(4) + "\n"
+                + "RENTING PRICE:   " + equipinfo.get(6) + "\n \n"
+                
+                
+        + "RENTING INFORMATION ----------------------\n" 
+                
+                +"BORROWED DATE:     " + borroweddate + "\n"
+                +"DUE DATE:          " + duedate + "\n"
+                + "QUANTITY:         " + rentquantity + "\n"
+                + "TOTAY PAYABLE: " + totalpayable + "\n"
+        
+        
+        );
+    
+    
+    }
+    
+    
+    
+    
+
     
     
     
@@ -518,8 +1005,10 @@ public class addrenter extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
-    private javax.swing.JLabel jLabel11;
+    private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel13;
+    private javax.swing.JLabel jLabel14;
+    private javax.swing.JLabel jLabel15;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel6;
@@ -543,12 +1032,12 @@ public class addrenter extends javax.swing.JFrame {
     private javax.swing.JLabel jlbl_contract;
     private javax.swing.JLabel jlbl_equipimage;
     private javax.swing.JLabel jlbl_govid;
-    private javax.swing.JLabel jlbl_totalpayable;
     private javax.swing.JPanel jpnl_finalizedtransac;
     private javax.swing.JPanel jpnl_personalinfo;
     private javax.swing.JPanel jpnl_rentinginfo;
     private javax.swing.JTextArea jtxa_spec;
     private javax.swing.JTextArea jtxa_transummary;
+    private javax.swing.JTextField jtxt_Quantity;
     private javax.swing.JTextField jtxt_address;
     private javax.swing.JTextField jtxt_cnum;
     private javax.swing.JTextField jtxt_duedate;

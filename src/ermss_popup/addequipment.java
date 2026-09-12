@@ -394,7 +394,7 @@ public class addequipment extends javax.swing.JFrame {
              
          }else{
          
-             String newequip = "INSERT INTO equipment_info (model_id, category_name, equipment_name, brand_name, product_image, specificatuion, quantity, renting_price, notes ) VALUES (?,?,?,?,?,?,?,?,?)";
+             String newequip = "INSERT INTO equipment_info (model_id, category_name, equipment_name, brand_name, product_image, specifications, quantity, renting_price, notes ) VALUES (?,?,?,?,?,?,?,?,?)";
              
             try {
                 pts = DBConnect.getInstance().con.prepareStatement(newequip);
