@@ -8,16 +8,181 @@ package ermss;
 import java.awt.Color;
 import ermss_popup.*;
 
+import databaseconnection.DBConnect;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.table.DefaultTableModel;
+
 /**
  *
  * @author charl_pxdrf1n
  */
+
+
+
+
+
 public class registrypanel extends javax.swing.JPanel {
 
+    PreparedStatement pts;
+    ResultSet rs;
+    PreparedStatement pts2;
+    ResultSet rs2;
+    
+    
+    
+    
+    
+    
+    
+    
     /** Creates new form registrypanel */
     public registrypanel() {
         initComponents();
+        
+        /*      
+        jcmb_categoryfilter.addItem("ALL");
+        String getcategories = "SELECT * FROM categories"; 
+        try {
+            pts = DBConnect.getInstance().con.prepareStatement(getcategories);
+            rs = pts.executeQuery();
+            while(rs.next()){
+            jcmb_categoryfilter.addItem(rs.getString(1));
+            
+            }   
+        } catch (SQLException ex) {
+            Logger.getLogger(addrenter.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        */
+        
+        
+        
+        
+        
+        
+        
+        getcategorylist();
+        //this.revalidate();
+
+        getrenterlist("ALL", "ALL");
+        
+        jcmb_statusfilter.addActionListener(e -> {
+            String selectedstatus = jcmb_statusfilter.getSelectedItem().toString();
+            String selectedcategory = jcmb_categoryfilter.getSelectedItem().toString();
+            getrenterlist(selectedstatus, selectedcategory);
+        });
+        
+        jcmb_categoryfilter.addActionListener(e -> {
+            String selectedstatus = jcmb_statusfilter.getSelectedItem().toString();
+            String selectedcategory = jcmb_categoryfilter.getSelectedItem().toString();
+            getrenterlist(selectedstatus, selectedcategory);
+        });
+
     }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+// NOTE TO SIR: DOES NOT AUTOMATICALLY UPDATE STATUS, BOTH PASTDUEDATE AND RETURNED
+//STATUS IS MANUALLY CHANGED IN DATA BASE
+//PENALTIY IS NOT CALCULATED IF RENTER IS PASTDUEDATE
+
+
+
+    public void getrenterlist(String statusfilter, String categoryfilter){
+    
+        DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
+        model.setRowCount(0);
+        //getcategorylist();
+        
+        String get = "SELECT * FROM rent_info"; 
+        
+        try {
+         pts = DBConnect.getInstance().con.prepareStatement(get); 
+         rs = pts.executeQuery(); 
+            
+        while(rs.next()){
+        String renter_id = rs.getString("renter_id");
+        String category = rs.getString("category_name");
+        String status = rs.getString("status");
+                
+                
+        if((statusfilter.equals("ALL") || 
+            status.equals(statusfilter)) && 
+            (categoryfilter.equals("ALL") || 
+            category.equals(categoryfilter))){
+                
+
+        String getrenter = "SELECT * FROM renter_info WHERE renter_id = '" + renter_id + "'";
+         pts2 = DBConnect.getInstance().con.prepareStatement(getrenter); 
+         rs2 = pts2.executeQuery(); 
+                    
+        if(rs2.next()){
+            model.addRow(new Object[]{
+            rs2.getString("renter_id"),   
+            rs2.getString("first_name"),   
+            rs2.getString("last_name"),    
+            rs2.getString("contact_no"),   
+            rs2.getString("address"),    
+            status         
+            //getcategorylist();        
+        });
+        }
+                    
+        }
+                
+        }
+            
+            //getcategorylist();
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(registrypanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    
+        //getcategorylist();
+    }
+    
+    
+    
+    
+    
+    
+    
+    public void getcategorylist(){
+    
+        jcmb_categoryfilter.addItem("ALL");
+        String getcategories = "SELECT * FROM categories"; 
+        try {
+            pts = DBConnect.getInstance().con.prepareStatement(getcategories);
+            rs = pts.executeQuery();
+            while(rs.next()){
+            jcmb_categoryfilter.addItem(rs.getString(1));
+            //this.revalidate();
+            
+            }   
+        } catch (SQLException ex) {
+            Logger.getLogger(addrenter.class.getName()).log(Level.SEVERE, null, ex);
+        }    
+        
+        //this.revalidate();
+    }
+    
+    //jcmb_statusfilter
+    //jcmb_categoryfilter
+    
+    
+    
+    
+    
 
     /** This method is called from within the constructor to
      * initialize the form.
@@ -32,6 +197,10 @@ public class registrypanel extends javax.swing.JPanel {
         jLabel1 = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTable1 = new javax.swing.JTable();
+        jcmb_statusfilter = new javax.swing.JComboBox<>();
+        jcmb_categoryfilter = new javax.swing.JComboBox<>();
+        jLabel2 = new javax.swing.JLabel();
+        jLabel3 = new javax.swing.JLabel();
 
         setBackground(new java.awt.Color(255, 255, 255));
         setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
@@ -83,11 +252,32 @@ public class registrypanel extends javax.swing.JPanel {
         jScrollPane1.setViewportView(jTable1);
 
         add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 70, 690, 350));
+
+        jcmb_statusfilter.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "ALL", "ONGOING", "PASTDUEDATE", "RETURNED" }));
+        jcmb_statusfilter.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jcmb_statusfilterActionPerformed(evt);
+            }
+        });
+        add(jcmb_statusfilter, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 450, 150, -1));
+
+        jcmb_categoryfilter.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jcmb_categoryfilterActionPerformed(evt);
+            }
+        });
+        add(jcmb_categoryfilter, new org.netbeans.lib.awtextra.AbsoluteConstraints(180, 450, 150, -1));
+
+        jLabel2.setText("SORT BY STATUS");
+        add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 430, -1, -1));
+
+        jLabel3.setText("SORT BY CATEGORIES");
+        add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(180, 430, -1, -1));
     }// </editor-fold>//GEN-END:initComponents
 
     private void Jlbl_addrenterMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Jlbl_addrenterMouseClicked
 
-        addrenter newrenter = new addrenter();
+        addrenter newrenter = new addrenter(this);
         
         newrenter.setSize(315, 490);
         newrenter.setLocationRelativeTo(null);
@@ -103,12 +293,24 @@ public class registrypanel extends javax.swing.JPanel {
         Jlbl_addrenter.setBackground(new Color(220,220,220));
     }//GEN-LAST:event_Jlbl_addrenterMouseExited
 
+    private void jcmb_statusfilterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcmb_statusfilterActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jcmb_statusfilterActionPerformed
+
+    private void jcmb_categoryfilterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcmb_categoryfilterActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jcmb_categoryfilterActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel Jlbl_addrenter;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable jTable1;
+    public javax.swing.JComboBox<String> jcmb_categoryfilter;
+    public javax.swing.JComboBox<String> jcmb_statusfilter;
     // End of variables declaration//GEN-END:variables
 
 }

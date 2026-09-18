@@ -71,9 +71,61 @@ public class addrenter extends javax.swing.JFrame {
     
     ArrayList<String> personalInfo = new ArrayList<>();
    
+        ermss.registrypanel registry;
+
 
 
   
+    
+    public addrenter(ermss.registrypanel registry) {
+        initComponents();
+        
+        this.registry = registry;
+  
+            jtxt_fname.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "first name");
+            jtxt_mname.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "middle name");
+            jtxt_lname.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "last name");
+            jtxt_cnum.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "contact number");
+            jtxt_mail.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "gmail");
+            jtxt_address.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "address");
+            jlbl_govid.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "goverment ID");
+            
+            jtxa_spec.disable();
+            jtxt_Quantity.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "quantity");
+            jtxt_duedate.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "DD-MM-YYYY");
+            jtxt_eventinfo.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "event information");
+            jtxa_transummary.disable();
+            
+            jtxt_payment.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "payment");
+        
+            jcmb_equipment.removeAllItems();
+            jcmb_category.removeAllItems();
+            
+            String getcategories = "SELECT * FROM categories";
+            
+        try {
+            pts = DBConnect.getInstance().con.prepareStatement(getcategories);
+            rs = pts.executeQuery();
+            while(rs.next()){
+            jcmb_category.addItem(rs.getString(1));
+            
+            }   
+        } catch (SQLException ex) {
+            Logger.getLogger(addrenter.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        //comboActionListeners();
+        
+        comboActionListeners();
+            
+            
+        //NO TIME AND DATE IS SHOWING--------------------------
+        formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        LocalDate currentDate = LocalDate.now();
+        borroweddate = currentDate.format(formatter);
+        jlbl_borroweddate.setText(borroweddate);
+    }
+    
     
     public addrenter() {
         initComponents();
@@ -121,6 +173,16 @@ public class addrenter extends javax.swing.JFrame {
         borroweddate = currentDate.format(formatter);
         jlbl_borroweddate.setText(borroweddate);
     }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -682,7 +744,7 @@ JFileChooser chooser = new JFileChooser();
                 pts.setString(3, personalInfo.get(2));
                 pts.setString(4, personalInfo.get(3));
                 pts.setString(5, personalInfo.get(4));
-                pts.setString(6, personalInfo.get(4));
+                pts.setString(6, personalInfo.get(5));
                 pts.setBytes(7,  uploadedDocu);
                 
                  addrenterstate = pts.execute();
@@ -730,7 +792,7 @@ JFileChooser chooser = new JFileChooser();
                 pts.setInt(7, rentquantity);
                 pts.setDouble(8, totalpayable);
                 pts.setBytes(9, contractfile);
-                pts.setString(10, "Ongoing");
+                pts.setString(10, "ONGOING");
                 
                 boolean addRentState = pts.execute();
                 
@@ -760,6 +822,14 @@ JFileChooser chooser = new JFileChooser();
                     jtxt_address.setText("");
                     
                     this.dispose();
+                    
+                    
+                    
+                    if(registry != null){
+                        String currentstatus = registry.jcmb_statusfilter.getSelectedItem().toString();
+                        String currentcategory = registry.jcmb_categoryfilter.getSelectedItem().toString();
+                        registry.getrenterlist(currentstatus, currentcategory);
+                    }
                 }
                 
                 
